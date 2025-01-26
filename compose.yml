@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  php:
+    build:
+      context: .
+      dockerfile: dockerfile
+    volumes:
+      - ./principal:/var/www/html/principal/
+      - ./principal/vendor:/var/www/html/principal/vendor
+      - ./principal/storage:/var/www/html/principal/storage
+    ports:
+      - 8080:80
+    depends_on:
+      - db
+    command: bash -c "chown -R www-data:www-data /var/www/html/ && apache2-foreground"
+      
+  db:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: contrasenita123
+      MYSQL_DATABASE: db
+      MYSQL_USER: mysqldb
+      MYSQL_PASSWORD: contrasenita123
+    ports:
+      - 3306:3306
+    volumes:
+      - db-data:/var/lib/mysql
+    expose:
+      - 3306
+
+  composer:
+    image: composer:latest
+    volumes:
+      - ./principal:/app
+    working_dir: /app
+    command: ["composer", "install"]
+  
+  node:
+    image: node:18
+    working_dir: /var/www/html/principal
+    volumes:
+      - ./principal:/var/www/html/principal
+    command: ["npm", "install"]
+
+volumes:
+  db-data:
